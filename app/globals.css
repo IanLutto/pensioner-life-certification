@@ -1,0 +1,59 @@
+/* app/globals.css */
+
+@import "tailwindcss";
+@tailwind utilities;
+
+:root {
+  /* Paper — cooler and greyer than the typical warm-cream AI default */
+  --color-bg: #eef1ee;
+  --color-card: #ffffff;
+
+  /* Ink — deep forest, not pure black; this is the brand's primary color */
+  --color-ink: #16302b;
+  --color-muted: #5b6b63;
+
+  /* Brass — the one accent, evokes a medallion/seal rather than a "tech" gradient */
+  --color-accent: #b8823f;
+  --color-accent-hover: #9c6d33;
+  --color-accent-ink: #2a1c0d; /* text color when sitting on the accent */
+
+  --color-border: rgba(22, 48, 43, 0.12);
+  --color-focus: #2f6b57;
+}
+
+.dark {
+  --color-bg: #0e1512;
+  --color-card: #142019;
+
+  --color-ink: #e9efec;
+  --color-muted: #9db0a7;
+
+  --color-accent: #d6a35f;
+  --color-accent-hover: #e3b378;
+  --color-accent-ink: #22160a;
+
+  --color-border: rgba(233, 239, 236, 0.14);
+  --color-focus: #7fc9ab;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@keyframes seal-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.55; }
+  50% { transform: scale(1.06); opacity: 0.9; }
+}
+
+.seal-ring {
+  animation: seal-pulse 3.2s ease-in-out infinite;
+}
