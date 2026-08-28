@@ -1,46 +1,44 @@
-/* app/globals.css */
-
 @import "tailwindcss";
-@tailwind utilities;
 
-:root {
-  /* Paper — cooler and greyer than the typical warm-cream AI default */
-  --color-bg: #eef1ee;
+@theme {
+  /* Paper — subtle cool background tint */
+  --color-bg: #f2f7f9;
   --color-card: #ffffff;
 
-  /* Ink — deep forest, not pure black; this is the brand's primary color */
-  --color-ink: #16302b;
-  --color-muted: #5b6b63;
+  /* Primary Brand — #01A4CD integrated for core ink & structural elements */
+  --color-ink: #003746;       /* Deepened tone of primary for high-contrast text */
+  --color-muted: #4a6a74;     /* Muted slate derived from primary hue */
 
-  /* Brass — the one accent, evokes a medallion/seal rather than a "tech" gradient */
-  --color-accent: #b8823f;
-  --color-accent-hover: #9c6d33;
-  --color-accent-ink: #2a1c0d; /* text color when sitting on the accent */
+  /* Secondary Accent — #D51668 (Magenta) as the action color */
+  --color-accent: #d51668;
+  --color-accent-hover: #b50e54;
+  --color-accent-ink: #ffffff; /* White text on magenta elements */
 
-  --color-border: rgba(22, 48, 43, 0.12);
-  --color-focus: #2f6b57;
+  --color-border: rgba(1, 164, 205, 0.16);
+  --color-focus: #01a4cd;      /* Primary cyan used for focused state rings */
 }
 
 .dark {
-  --color-bg: #0e1512;
-  --color-card: #142019;
+  --color-bg: #061519;
+  --color-card: #0d2127;
 
-  --color-ink: #e9efec;
-  --color-muted: #9db0a7;
+  --color-ink: #e3f5f9;
+  --color-muted: #85a9b4;
 
-  --color-accent: #d6a35f;
-  --color-accent-hover: #e3b378;
-  --color-accent-ink: #22160a;
+  --color-accent: #e63782;     /* Slightly lightened for dark mode contrast */
+  --color-accent-hover: #f05497;
+  --color-accent-ink: #ffffff;
 
-  --color-border: rgba(233, 239, 236, 0.14);
-  --color-focus: #7fc9ab;
+  --color-border: rgba(227, 245, 249, 0.14);
+  --color-focus: #38c5ea;
 }
 
 body {
-  background: var(--color-bg);
+  background-color: var(--color-bg);
   color: var(--color-ink);
 }
 
+/* Reduced motion adjustments */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;
@@ -49,11 +47,23 @@ body {
   }
 }
 
+/* Keyframes */
 @keyframes seal-pulse {
   0%, 100% { transform: scale(1); opacity: 0.55; }
   50% { transform: scale(1.06); opacity: 0.9; }
 }
 
+@keyframes scan-sweep {
+  0% { top: 15%; opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { top: 85%; opacity: 0; }
+}
+
 .seal-ring {
   animation: seal-pulse 3.2s ease-in-out infinite;
+}
+
+.scan-line-active {
+  animation: scan-sweep 2.4s ease-in-out infinite;
 }

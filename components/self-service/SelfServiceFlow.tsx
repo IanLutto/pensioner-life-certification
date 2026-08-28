@@ -15,17 +15,21 @@
 // deliverable, not something this PoC has yet).
 //
 // The isolated WebAuthn prototype lives separately at
-// app/prototypes/prototypes — not imported here, on purpose.
+// app/prototypes/webauthn — not imported here, on purpose.
 
 import { useState } from "react";
 import { IdEntryForm } from "./IdEntryForm";
 import { OtpVerifyForm } from "./OtpVerifyForm";
-import { FaceLivenessStepPlaceholder, type LivenessResult } from "./FaceLivenessStepPlaceholder";
+import { FaceLivenessStepPlaceholder } from "./FaceLivenessStepPlaceholder";
 import { OtpPinConfirm } from "./OtpPinConfirm";
 import { FlowShell } from "./FlowShell";
 import { Seal } from "@/components/shared/ui/Seal";
 import { CertificateSummary } from "@/components/shared/CertificateSummary";
-import type { AuthConfirmation, CertificateSummary as CertificateSummaryType } from "@/lib/certification/types";
+import type {
+    AuthConfirmation,
+    CertificateSummary as CertificateSummaryType,
+    LivenessResult,
+} from "@/lib/certification/types";
 
 type Step = "id-entry" | "otp-verify" | "liveness" | "confirm" | "done";
 
