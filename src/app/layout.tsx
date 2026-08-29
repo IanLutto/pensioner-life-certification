@@ -17,9 +17,16 @@ const bodyFont = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "CPF Pension Self-Certification",
-  description: "Confirm your pension status securely from your phone.",
-  manifest: "/manifest.json",
+    title: "CPF Pension Self-Certification",
+    description: "Confirm your pension status securely from your phone.",
+    appleWebApp: {
+        capable: true,
+        statusBarStyle: "default",
+        title: "Life Cert",
+    },
+    icons: {
+        apple: "/icons/icon-192.png",
+    },
 };
 
 export const viewport: Viewport = {

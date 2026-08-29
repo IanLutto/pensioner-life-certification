@@ -1,0 +1,29 @@
+/* styles/tokens.css
+   Self-service pensioner flow — design tokens.
+   Import once, globally (e.g. in app/globals.css). */
+
+:root {
+  /* Surface */
+  --color-surface: #F7F8F4;
+  --color-surface-raised: #FFFFFF;
+
+  /* Text */
+  --color-ink: #1E2A32;
+  --color-muted: #5B6B66;
+  --color-border: #DCE3DA;
+
+  /* Primary action */
+  --color-accent: #2F5D50;
+  --color-accent-hover: #24483E;
+
+  /* Status */
+  --color-error: #B3413B;
+
+  /* Reserved for the certificate/seal moment only — do not use elsewhere */
+  --color-seal: #B08B2E;
+  --color-focus: #B08B2E;
+
+  /* Type */
+  --font-display: "Atkinson Hyperlegible", system-ui, sans-serif;
+  --font-seal: "Roboto Slab", serif;
+}

@@ -26,7 +26,7 @@ export default function Home() {
           </h1>
 
           <p className="mt-4 text-base leading-7 [color:var(--color-muted)]">
-            Confirm you&#39;re still with us so your pension payments continue
+            Confirm you're still with us so your pension payments continue
             without interruption.
           </p>
 
