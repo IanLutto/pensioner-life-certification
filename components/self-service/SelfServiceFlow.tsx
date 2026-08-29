@@ -2,53 +2,56 @@
 
 // components/self-service/SelfServiceFlow.tsx
 //
-// PHASE 1 POC SCOPE — per the roadmap:
-//   "OTP + PIN as the auth path for the PoC — fastest way to a working
-//    demo without waiting on WebAuthn. WebAuthn kept as an isolated
-//    prototype alongside this, not gating the PoC."
-//
-// So: ID entry -> OTP login -> liveness (Part A placeholder) -> OTP+PIN
-// confirm (mandatory) -> minimal certificate. No WebAuthn, no strong/
-// borderline risk branching — that logic belongs to Phase 2
-// "Convergence," once the mandatory-vs-opportunistic decision is made
-// and it can lean on a real business-rules engine (a Phase 1 CRO-track
-// deliverable, not something this PoC has yet).
-//
-// The isolated WebAuthn prototype lives separately at
-// app/prototypes/webauthn — not imported here, on purpose.
+// Full flow, treated as the real thing rather than a throwaway PoC:
+// ID entry -> OTP login -> liveness (Part A placeholder) -> branch on
+// confidence -> certificate.
+//   - "strong" liveness: certify directly, no further step.
+//   - "borderline" liveness: route into the fingerprint booster
+//     (WebAuthn, falling back to OTP+PIN) before certifying.
+// The booster is still optional even on the borderline path — skipping
+// it doesn't block certification, it's an input to the risk decision,
+// not a gate.
 
 import { useState } from "react";
 import { IdEntryForm } from "./IdEntryForm";
 import { OtpVerifyForm } from "./OtpVerifyForm";
-import { FaceLivenessStepPlaceholder } from "./FaceLivenessStepPlaceholder";
-import { OtpPinConfirm } from "./OtpPinConfirm";
+import { FaceLivenessCapture } from "./FaceLivenessCapture";
+import { FingerprintStep } from "./FingerprintStep";
 import { FlowShell } from "./FlowShell";
 import { Seal } from "@/components/shared/ui/Seal";
 import { CertificateSummary } from "@/components/shared/CertificateSummary";
-import type {
-    AuthConfirmation,
-    CertificateSummary as CertificateSummaryType,
-    LivenessResult,
-} from "@/lib/certification/types";
+import type { CertificateSummary as CertificateSummaryType, LivenessResult } from "@/lib/certification/types";
+import type { FingerprintSignal } from "@/lib/webauthn/types";
 
-type Step = "id-entry" | "otp-verify" | "liveness" | "confirm" | "done";
+type Step = "id-entry" | "otp-verify" | "liveness" | "fingerprint" | "done";
 
 export function SelfServiceFlow() {
     const [step, setStep] = useState<Step>("id-entry");
     const [nationalId, setNationalId] = useState("");
     const [maskedPhone, setMaskedPhone] = useState("");
-    // Captured for later audit/logging even though the PoC doesn't branch on
-    // it yet — Phase 2's risk decision will need this history.
     const [liveness, setLiveness] = useState<LivenessResult | null>(null);
+    const [fingerprintSignal, setFingerprintSignal] = useState<FingerprintSignal | null>(null);
     const [certificate, setCertificate] = useState<CertificateSummaryType | null>(null);
 
-    function handleConfirmed(_confirmation: AuthConfirmation) {
+    function issueCertificate() {
         setCertificate({
             pensionerId: nationalId,
             issuedAt: new Date().toISOString(),
             status: "certified",
         });
         setStep("done");
+    }
+
+    function handleLivenessComplete(result: LivenessResult) {
+        setLiveness(result);
+        // The branch point: strong confidence certifies immediately; borderline
+        // routes into the fingerprint booster as an extra input to the risk
+        // decision before certifying.
+        if (result.confidence === "strong") {
+            issueCertificate();
+        } else {
+            setStep("fingerprint");
+        }
     }
 
     if (step === "id-entry") {
@@ -80,20 +83,20 @@ export function SelfServiceFlow() {
     if (step === "liveness") {
         return (
             <FlowShell stepIndex={2}>
-                <FaceLivenessStepPlaceholder
-                    onComplete={(result) => {
-                        setLiveness(result);
-                        setStep("confirm"); // always confirm — no branching in the PoC
-                    }}
-                />
+                <FaceLivenessCapture onComplete={handleLivenessComplete} />
             </FlowShell>
         );
     }
 
-    if (step === "confirm") {
+    if (step === "fingerprint") {
         return (
             <FlowShell stepIndex={3}>
-                <OtpPinConfirm onConfirmed={handleConfirmed} />
+                <FingerprintStep
+                    onComplete={(signal) => {
+                        setFingerprintSignal(signal); // may be null — the risk decision still runs
+                        issueCertificate();
+                    }}
+                />
             </FlowShell>
         );
     }
@@ -108,6 +111,11 @@ export function SelfServiceFlow() {
             <p className="mt-3 max-w-xs text-base leading-7 [color:var(--color-muted)]">
                 Your pension payments will continue as normal.
             </p>
+            {liveness?.confidence === "borderline" && (
+                <p className="mt-4 text-xs [color:var(--color-muted)]">
+                    Extra confidence check: {fingerprintSignal ? fingerprintSignal.method : "skipped"}
+                </p>
+            )}
             {certificate && <CertificateSummary certificate={certificate} />}
         </div>
     );
