@@ -29,6 +29,7 @@ export type LivenessResult = {
 // can come back empty for a pensioner who hasn't certified this period.
 export type CertificateSummary = {
   pensionerId: string;
+  referenceCode: string;
   issuedAt: string;
   status: "certified" | "not_certified";
   nextDueAt?: string;

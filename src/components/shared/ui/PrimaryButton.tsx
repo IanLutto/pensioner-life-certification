@@ -1,24 +1,22 @@
-// components/shared/ui/PrimaryButton.tsx
-// NOTE: rebuilt from usage only — I haven't seen the original source.
-// Reconcile any props/behavior this is missing against the real file.
-
 import { ButtonHTMLAttributes } from "react";
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement>;
 
-export function PrimaryButton({ className = "", children, ...rest }: Props) {
-  return (
-      <button
-          className={`h-16 rounded-2xl px-6 text-lg font-bold transition-colors
+export function PrimaryButton({ className = "", children, disabled, ...rest }: Props) {
+    return (
+        <button
+            disabled={disabled}
+            className={`flex h-14 w-full items-center justify-center rounded-full px-6 text-base font-semibold shadow-md transition-all
         [font-family:var(--font-display)]
-        [background-color:var(--color-accent)] [color:var(--color-surface)]
-        hover:[background-color:var(--color-accent-hover)]
-        disabled:opacity-40 disabled:cursor-not-allowed
+        [background:var(--color-accent)] [color:var(--color-accent-ink)]
+        hover:[background:var(--color-accent-hover)]
+        active:scale-[0.99]
+        disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100
         focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:[outline-color:var(--color-focus)]
         ${className}`}
-          {...rest}
-      >
-        {children}
-      </button>
-  );
+            {...rest}
+        >
+            {children}
+        </button>
+    );
 }

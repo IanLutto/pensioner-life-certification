@@ -15,9 +15,12 @@
 // entirely for fast downstream testing; they're separate from the
 // mock-outcome radios, which still require a real recording to trigger.
 
+"use client";
+
 import { useEffect, useRef, useState } from "react";
 import { pickSupportedMimeType } from "@/lib/media/pick-mime-type";
 import { submitLivenessCapture } from "@/lib/media/liveness-client";
+import { PrimaryButton } from "@/components/shared/ui/PrimaryButton";
 import type { LivenessResult } from "@/lib/certification/types";
 
 type Phase =
@@ -33,10 +36,11 @@ const RECORD_MS = 2500;
 
 const STATUS_BADGE: Partial<Record<Phase, string>> = {
   idle: "Awaiting camera",
-  "requesting-camera": "Awaiting camera",
-  preview: "Positioning face",
-  countdown: "Get ready",
-  uploading: "Processing capture",
+  "requesting-camera": "Connecting camera…",
+  preview: "Position face in oval",
+  countdown: "Hold still…",
+  recording: "Capturing…",
+  uploading: "Checking capture…",
 };
 
 export function FaceLivenessCapture({
@@ -56,8 +60,10 @@ export function FaceLivenessCapture({
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
+  // Automatically request camera permission on mount for lower friction
   useEffect(() => {
-    return () => stopStream(); // release the camera if the pensioner navigates away mid-flow
+    handleEnableCamera();
+    return () => stopStream();
   }, []);
 
   function stopStream() {
@@ -78,9 +84,10 @@ export function FaceLivenessCapture({
         videoRef.current.srcObject = stream;
       }
       setPhase("preview");
-    } catch {
+    } catch (err) {
+      console.error("Camera Access Error:", err);
       setErrorMessage(
-          "We couldn't access your camera. Check your browser's camera permission and try again."
+          "We could not access your camera. Please check your browser's camera permissions and try again."
       );
       setPhase("error");
     }
@@ -104,14 +111,14 @@ export function FaceLivenessCapture({
   function startRecording() {
     const stream = streamRef.current;
     if (!stream) {
-      setErrorMessage("Camera connection was lost. Please try again.");
+      setErrorMessage("Camera connection was lost. Please try enabling the camera again.");
       setPhase("error");
       return;
     }
 
     const mimeType = pickSupportedMimeType();
     if (!mimeType) {
-      setErrorMessage("Your browser doesn't support video capture. Try a different browser.");
+      setErrorMessage("Your browser does not support video capture. Please try using Chrome or Safari.");
       setPhase("error");
       return;
     }
@@ -131,7 +138,7 @@ export function FaceLivenessCapture({
 
   async function handleRecordingComplete() {
     setPhase("uploading");
-    stopStream(); // done with the camera — release it before waiting on the network
+    stopStream();
 
     const mimeType = recorderRef.current?.mimeType ?? "video/webm";
     const blob = new Blob(chunksRef.current, { type: mimeType });
@@ -140,14 +147,14 @@ export function FaceLivenessCapture({
       const result = await submitLivenessCapture(blob, mockOutcome);
       onComplete(result);
     } catch {
-      setErrorMessage("We couldn't check that capture. Please try again.");
+      setErrorMessage("We couldn't verify your capture. Please try again.");
       setPhase("error");
     }
   }
 
   function handleRetry() {
     setErrorMessage(null);
-    setPhase("idle");
+    handleEnableCamera();
   }
 
   function handleQuickSkip(confidence: LivenessResult["confidence"]) {
@@ -167,19 +174,19 @@ export function FaceLivenessCapture({
             Look at the camera
           </h1>
           <p className="mt-2 text-sm leading-6 [color:var(--color-muted)]" aria-live="polite">
-            {phase === "idle" && "We need your camera to confirm it's you."}
+            {phase === "idle" && "Connecting to your camera…"}
             {phase === "requesting-camera" && "Requesting camera access…"}
-            {phase === "preview" && "Position your face in the frame, then start."}
-            {phase === "countdown" && "Hold still…"}
-            {phase === "recording" && "Recording — stay still."}
-            {phase === "uploading" && "Checking your capture…"}
+            {phase === "preview" && "Center your face in the oval guide below."}
+            {phase === "countdown" && "Hold still for a moment…"}
+            {phase === "recording" && "Recording video verification—stay still."}
+            {phase === "uploading" && "Checking your video verification…"}
             {phase === "error" && errorMessage}
           </p>
         </div>
 
-        {/* Viewfinder */}
-        <div className="relative mx-auto h-72 w-full max-w-xs overflow-hidden rounded-3xl border [border-color:var(--color-border)] [background:#091417] shadow-inner">
-          {/* Sensor-texture background — sits behind the video, shows through in idle/error */}
+        {/* Viewfinder Container */}
+        <div className="relative mx-auto h-72 w-full max-w-xs overflow-hidden rounded-3xl border shadow-inner [border-color:var(--color-border)] [background:#091417]">
+          {/* Sensor Texture Background */}
           <div
               className="absolute inset-0 opacity-30"
               style={{
@@ -199,16 +206,16 @@ export function FaceLivenessCapture({
               }`}
           />
 
-          {/* HUD corner brackets — persistent across every phase */}
-          <div className="absolute left-4 top-4 h-5 w-5 rounded-tl border-l-2 border-t-2 border-accent/60" />
-          <div className="absolute right-4 top-4 h-5 w-5 rounded-tr border-r-2 border-t-2 border-accent/60" />
-          <div className="absolute bottom-4 left-4 h-5 w-5 rounded-bl border-b-2 border-l-2 border-accent/60" />
-          <div className="absolute bottom-4 right-4 h-5 w-5 rounded-br border-b-2 border-r-2 border-accent/60" />
+          {/* HUD Corner Brackets */}
+          <div className="absolute left-4 top-4 h-5 w-5 rounded-tl border-l-2 border-t-2 [border-color:var(--color-accent)] opacity-80" />
+          <div className="absolute right-4 top-4 h-5 w-5 rounded-tr border-r-2 border-t-2 [border-color:var(--color-accent)] opacity-80" />
+          <div className="absolute bottom-4 left-4 h-5 w-5 rounded-bl border-b-2 border-l-2 [border-color:var(--color-accent)] opacity-80" />
+          <div className="absolute bottom-4 right-4 h-5 w-5 rounded-br border-b-2 border-r-2 [border-color:var(--color-accent)] opacity-80" />
 
-          {/* Face silhouette guide — only shown before/without a live feed */}
+          {/* Face Silhouette Guide */}
           {!showingVideo && (
-              <div className="absolute inset-0 flex items-center justify-center opacity-30">
-                <svg className="h-32 w-32 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1">
+              <div className="absolute inset-0 flex items-center justify-center opacity-40">
+                <svg className="h-32 w-32 [color:var(--color-accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1">
                   <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -218,72 +225,67 @@ export function FaceLivenessCapture({
               </div>
           )}
 
-          {/* Face-guide oval — dashed while idle, solid once a real feed is active */}
+          {/* Face Oval Frame */}
           <div
-              className={`absolute inset-0 m-auto h-48 w-36 rounded-[50%] border-2 border-accent/80 ${
-                  showingVideo ? "" : "border-dashed"
+              className={`absolute inset-0 m-auto h-48 w-36 rounded-[50%] border-2 [border-color:var(--color-accent)] ${
+                  showingVideo ? "opacity-90" : "border-dashed opacity-50"
               }`}
           />
 
-          {/* Scan sweep — reinforces "actively scanning" before recording starts.
-            Class name matches globals.css's .scan-line-active keyframe. */}
+          {/* Scanning Sweep Effect */}
           {(phase === "preview" || phase === "countdown") && (
-              <div className="scan-line-active absolute left-6 right-6 h-px bg-accent opacity-0 shadow-[0_0_10px_var(--color-accent)]" />
+              <div className="scan-line-active absolute left-6 right-6 h-px [background:var(--color-accent)] opacity-0 shadow-[0_0_10px_var(--color-accent)]" />
           )}
 
+          {/* Countdown Visual Overlay */}
           {phase === "countdown" && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/35">
-                <span className="text-5xl font-semibold text-white">{countdownValue || ""}</span>
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-xs">
+                <span className="text-6xl font-extrabold text-white">{countdownValue || ""}</span>
               </div>
           )}
 
+          {/* Recording Indicator */}
           {phase === "recording" && (
-              <div className="absolute left-3 top-3 flex items-center gap-2 rounded-full bg-black/40 px-3 py-1">
-                <span className="h-2 w-2 rounded-full bg-red-500" />
-                <span className="text-xs font-medium text-white">Recording</span>
+              <div className="absolute left-3 top-3 flex items-center gap-2 rounded-full bg-black/50 px-3 py-1 backdrop-blur-xs">
+                <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" />
+                <span className="text-xs font-semibold text-white">Recording</span>
               </div>
           )}
 
+          {/* Badge Label */}
           {badgeText && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/50 px-3 py-1 text-[11px] font-medium tracking-wide [color:var(--color-accent)] backdrop-blur-sm">
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-3.5 py-1 text-[11px] font-semibold tracking-wide [color:var(--color-accent-ink)] backdrop-blur-xs">
                 {badgeText}
               </div>
           )}
         </div>
 
+        {/* Action Controls */}
         {phase === "idle" && (
-            <button
-                onClick={handleEnableCamera}
-                className="flex h-14 w-full items-center justify-center rounded-full text-base font-semibold transition-colors [background:var(--color-accent)] [color:var(--color-accent-ink)] hover:[background:var(--color-accent-hover)]"
-            >
+            <PrimaryButton onClick={handleEnableCamera}>
               Enable camera
-            </button>
+            </PrimaryButton>
         )}
 
         {phase === "preview" && (
-            <button
-                onClick={handleStartCapture}
-                className="flex h-14 w-full items-center justify-center rounded-full text-base font-semibold transition-colors [background:var(--color-accent)] [color:var(--color-accent-ink)] hover:[background:var(--color-accent-hover)]"
-            >
-              Start capture
-            </button>
+            <PrimaryButton onClick={handleStartCapture}>
+              Take Photo Verification →
+            </PrimaryButton>
         )}
 
         {phase === "error" && (
-            <button
-                onClick={handleRetry}
-                className="flex h-14 w-full items-center justify-center rounded-full border text-base font-medium [border-color:var(--color-border)] [color:var(--color-ink)]"
-            >
+            <PrimaryButton onClick={handleRetry}>
               Try again
-            </button>
+            </PrimaryButton>
         )}
 
+        {/* Development Tools */}
         {process.env.NEXT_PUBLIC_USE_MOCKS === "true" && (
-            <div className="rounded-2xl border border-dashed p-4 text-left [border-color:var(--color-border)]">
+            <div className="mt-2 rounded-2xl border border-dashed p-4 text-left [border-color:var(--color-border)]">
               <button
                   type="button"
                   onClick={() => setDevToolsOpen((v) => !v)}
-                  className="flex w-full items-center justify-between text-xs font-semibold tracking-wider [color:var(--color-muted)] uppercase"
+                  className="flex w-full items-center justify-between text-xs font-bold tracking-wider [color:var(--color-muted)] uppercase"
               >
                 <span>Dev simulation tools</span>
                 <span className="text-base">{devToolsOpen ? "−" : "+"}</span>
@@ -293,23 +295,33 @@ export function FaceLivenessCapture({
                   <div className="mt-3 flex flex-col gap-4 border-t pt-3 [border-color:var(--color-border)]">
                     <div>
                       <p className="text-xs [color:var(--color-muted)]">
-                        Sets what the mocked upload returns after a real recording completes.
+                        Sets what the mocked upload returns after a real recording completes:
                       </p>
                       <div className="mt-2 flex flex-col gap-2">
                         <label className="flex items-center gap-2 text-xs [color:var(--color-ink)]">
-                          <input type="radio" checked={mockOutcome === "strong"} onChange={() => setMockOutcome("strong")} />
-                          Recording result: strong match
+                          <input
+                              type="radio"
+                              name="mockOutcome"
+                              checked={mockOutcome === "strong"}
+                              onChange={() => setMockOutcome("strong")}
+                          />
+                          Mock result: strong match
                         </label>
                         <label className="flex items-center gap-2 text-xs [color:var(--color-ink)]">
-                          <input type="radio" checked={mockOutcome === "borderline"} onChange={() => setMockOutcome("borderline")} />
-                          Recording result: borderline match
+                          <input
+                              type="radio"
+                              name="mockOutcome"
+                              checked={mockOutcome === "borderline"}
+                              onChange={() => setMockOutcome("borderline")}
+                          />
+                          Mock result: borderline match
                         </label>
                       </div>
                     </div>
 
                     <div>
                       <p className="text-xs [color:var(--color-muted)]">
-                        Or skip the camera entirely, for testing what happens after this step.
+                        Skip camera capture for fast testing:
                       </p>
                       <div className="mt-2 grid grid-cols-2 gap-2">
                         <button
