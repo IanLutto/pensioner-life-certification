@@ -31,6 +31,7 @@ export type CertificateSummary = {
   pensionerId: string;
   referenceCode: string;
   issuedAt: string;
-  status: "certified" | "not_certified";
+  status: "certified" | "pending" | "expired";
   nextDueAt?: string;
+  verificationToken?: string; // Phase 2: optional token for QR + digital signature
 };

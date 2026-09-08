@@ -16,6 +16,9 @@
 
   --color-border: rgba(1, 164, 205, 0.16);
   --color-focus: #01a4cd;      /* Primary cyan used for focused state rings */
+
+  --color-success: #1c7a54;
+  --color-warning: #9c6408;
 }
 
 .dark {
@@ -31,6 +34,8 @@
 
   --color-border: rgba(227, 245, 249, 0.14);
   --color-focus: #38c5ea;
+  --color-success: #3bc988;
+  --color-warning: #f5b23a;
 }
 
 body {

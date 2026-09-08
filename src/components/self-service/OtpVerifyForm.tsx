@@ -5,6 +5,7 @@
 import { useState, useEffect } from "react";
 import { PrimaryButton } from "@/components/shared/ui/PrimaryButton";
 import { TextField } from "@/components/shared/ui/TextField";
+import {OtpPinInput} from "@/components/shared/ui/OtpPinInput";
 
 type Props = {
     nationalId: string;
@@ -116,21 +117,17 @@ export function OtpVerifyForm({ nationalId, maskedPhone, onVerified }: Props) {
                 </p>
             </div>
 
-            <div className="text-left">
-                <TextField
+            <div className="text-center">
+                <OtpPinInput
                     label="6-Digit Verification Code"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    autoComplete="one-time-code"
-                    placeholder="e.g. 123456"
                     value={otp}
-                    onChange={(e) => handleOtpChange(e.target.value)}
-                    required
+                    onChange={handleOtpChange}
+                    error={error || undefined}
                 />
 
                 {/* Dev Mode Helper */}
                 {process.env.NEXT_PUBLIC_USE_MOCKS === "true" && (
-                    <p className="mt-1.5 text-xs text-amber-600 font-medium">
+                    <p className="mt-3 text-xs text-amber-600 font-medium">
                         💡 Demo Mode: Use code <code className="font-bold">123456</code>
                     </p>
                 )}
@@ -160,11 +157,11 @@ export function OtpVerifyForm({ nationalId, maskedPhone, onVerified }: Props) {
                 )}
             </div>
 
-            {error && (
-                <p role="alert" aria-live="assertive" className="text-sm font-medium [color:var(--color-accent-hover)]">
-                    {error}
-                </p>
-            )}
+            {/*{error && (*/}
+            {/*    <p role="alert" aria-live="assertive" className="text-sm font-medium [color:var(--color-accent-hover)]">*/}
+            {/*        {error}*/}
+            {/*    </p>*/}
+            {/*)}*/}
         </form>
     );
 }
